@@ -1,10 +1,7 @@
 package Packet;
 
 import java.math.BigInteger;
-import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 import org.jnetpcap.*;
 import org.jnetpcap.nio.JBuffer;
@@ -18,7 +15,11 @@ import org.jnetpcap.protocol.tcpip.Tcp;
 import org.jnetpcap.protocol.tcpip.Udp;
 import org.jnetpcap.util.PcapPacketArrayList;
 
+import Objects.Packet;
+
 public class Analyze {
+	
+	private static ArrayList<Connection> connections = new ArrayList<Connection>();
 	
 	public static ArrayList<Packet> start(String trace, String option) {
 		
@@ -31,7 +32,6 @@ public class Analyze {
 		
 		ArrayList<Packet> client = new ArrayList<Packet>();
 		ArrayList<Packet> server = new ArrayList<Packet>();
-		ArrayList<Connection> connections = new ArrayList<Connection>();
 		
 		ArrayList<Integer> listTcp = new ArrayList<Integer>();
 		ArrayList<Integer> listEth = new ArrayList<Integer>();
@@ -143,10 +143,8 @@ public class Analyze {
 					}
 					packet.setSource(Constants.SYN);
 					clientSource = ByteHandler.getSourceIP();
-					if (!option.contains("a")) {
-						timestamp = ByteHandler.getTimestamp(Constants.SYN);
-						packet.setTime(timestamp);
-					}
+					timestamp = ByteHandler.getTimestamp(Constants.SYN);
+					packet.setTime(timestamp);
 					//Set connection number for packet
 					packet.setConnection(conn);
 					Connection c = new Connection();
@@ -164,10 +162,8 @@ public class Analyze {
 					packet.setSource(Constants.SYN_ACK);
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
 					serverSource = ByteHandler.getSourceIP();
-					if (!option.contains("a")) {
-						timestamp = ByteHandler.getTimestamp(Constants.SYN_ACK);
-						packet.setTime(timestamp);
-					}
+					timestamp = ByteHandler.getTimestamp(Constants.SYN_ACK);
+					packet.setTime(timestamp);
 					Packet pack;
 					//Loop through client and find previous request
 					for (int i = 0; i < client.size(); i++) {
@@ -192,10 +188,8 @@ public class Analyze {
 					}
 					packet.setSource(Constants.ACK);
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
-					if (!option.contains("a")) {
-						timestamp = ByteHandler.getTimestamp(Constants.ACK);
-						packet.setTime(timestamp);
-					}
+					timestamp = ByteHandler.getTimestamp(Constants.ACK);
+					packet.setTime(timestamp);
 					print = true;
 				} else if (buffer.getUByte(47) == 24) { 	//18 - PSH, ACK
 					if (option.contains("a")) {
@@ -203,10 +197,8 @@ public class Analyze {
 						System.out.println("Type: PSH, ACK");
 					}
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
-					if (!option.contains("a")) {
-						timestamp = ByteHandler.getTimestamp(Constants.PSH_ACK);
-						packet.setTime(timestamp);
-					}
+					timestamp = ByteHandler.getTimestamp(Constants.PSH_ACK);
+					packet.setTime(timestamp);
 					print = true;
 				} else if (buffer.getUByte(47) == 17) {		//11 - FIN, ACK
 					if (option.contains("a")) {	
@@ -214,10 +206,8 @@ public class Analyze {
 						System.out.println("Type: FIN, ACK");
 					}
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
-					if (!option.contains("a")) {
-						timestamp = ByteHandler.getTimestamp(Constants.FIN_ACK);
-						packet.setTime(timestamp);
-					}
+					timestamp = ByteHandler.getTimestamp(Constants.FIN_ACK);
+					packet.setTime(timestamp);
 					print = true;
 				} else if (buffer.getUByte(47) == 4) {		//4 - RST
 					if (option.contains("a")) {
@@ -332,7 +322,10 @@ public class Analyze {
 			
 		}
 				
-//		return connections;
 		return packetList;
+	}
+	
+	public static ArrayList<Connection> getConnections() {
+		return connections;
 	}
 }

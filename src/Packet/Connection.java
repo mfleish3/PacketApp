@@ -2,6 +2,8 @@ package Packet;
 
 import java.util.ArrayList;
 
+import Objects.Packet;
+
 public class Connection {
 
 	private int num;

@@ -3,6 +3,7 @@ package Setup;
 //AWT imports
 import java.awt.BorderLayout;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,6 +13,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+
+import javax.swing.BoxLayout;
 //Swing imports
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -21,50 +24,57 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.table.DefaultTableModel;
+
+import Calculations.Calculate;
+import Objects.Packet;
+import Objects.Results;
 //Packet imports
 import Packet.Analyze;
-import Packet.Packet;
 import Settings.Constants;
 
 public class FileBrowseSave extends JFrame {
 	
 	private JTextField filenameHttp = new JTextField();
 	private JTextField filenameSpdy = new JTextField();
+	private JTextField filenameQuic = new JTextField();
 	private JTextField pathHttp = new JTextField();
 	private JTextField pathSpdy = new JTextField();
+	private JTextField pathQuic = new JTextField();
 	private JButton browseHttp = new JButton("Browse HTTP");
 	private JButton browseSpdy = new JButton("Browse SDPY");
+	private JButton browseQuic = new JButton("Browse QUIC");
 	private File fileHttp;
 	private File fileSpdy;
+	private File fileQuic;
 	private DefaultTableModel modelHttp = new DefaultTableModel();
 	private DefaultTableModel modelSpdy = new DefaultTableModel();
+	private DefaultTableModel modelQuic = new DefaultTableModel();
+	private DefaultTableModel modelResults = new DefaultTableModel();
   
 	public FileBrowseSave() {
+		//Outer container for JFrame
+		JPanel outerContainer = new JPanel();
+		outerContainer.setLayout(new BoxLayout(outerContainer, BoxLayout.X_AXIS));
+		//Container for packet file, path, table, browse
+		JPanel packetContainer = new JPanel();
+		packetContainer.setLayout(new BoxLayout(packetContainer, BoxLayout.Y_AXIS));
+		//Container for results
+		JPanel resultsContainer = new JPanel();
+		resultsContainer.setLayout(new BoxLayout(resultsContainer, BoxLayout.Y_AXIS));
+		//Panel for filenames and paths 
 		JPanel p = new JPanel();
-		p.setLayout(new GridLayout(1, 2));
-		//Add action listeners
-		browseHttp.addActionListener(new BrowseHttp());
-		browseSpdy.addActionListener(new BrowseSpdy());
-		//Add action listeners to the JPanel
-		p.add(browseHttp);
-		p.add(browseSpdy);;
-		//Create the container and add the JPanel
-		Container cp = getContentPane();
-		cp.add(p, BorderLayout.SOUTH);
-		pathHttp.setEditable(false);
-		pathSpdy.setEditable(false);
-		filenameHttp.setEditable(false);
-		filenameSpdy.setEditable(false);
-		p = new JPanel();
 		p.setLayout(new GridLayout(2, 1));
 		p.add(filenameHttp);
 		p.add(filenameSpdy);
+		p.add(filenameQuic);
 		p.add(pathHttp);
 		p.add(pathSpdy);
-		cp.add(p, BorderLayout.NORTH);
-		//Create tables for HTTP and SPDY
+		p.add(pathQuic);
+		//Add filename/path panel to packetContainer
+		packetContainer.add(p);
+		//Panel for  HTTP, SPDY, QUIC tables
 		p = new JPanel();
-		p.setLayout(new GridLayout(1, 2));
+		p.setLayout(new GridLayout(1, 3));
 		//HTTP Table
 		JTable table = new JTable(modelHttp);
 		modelHttp.addColumn("Http Packet #"); 
@@ -79,7 +89,52 @@ public class FileBrowseSave extends JFrame {
 		modelSpdy.addColumn("Spdy Value");
 		tableContainer = new JScrollPane(table);
 		p.add(tableContainer, BorderLayout.WEST);
-		this.getContentPane().add(p);
+		//QUIC Table
+		table = new JTable(modelQuic);
+		modelQuic.addColumn("Quic Packet #");
+		modelQuic.addColumn("Quic Property"); 
+		modelQuic.addColumn("Quic Value");
+		tableContainer = new JScrollPane(table);
+		p.add(tableContainer, BorderLayout.WEST);
+		//Add tables panel to packerContainer
+		packetContainer.add(p);
+		//Panel for browse buttons
+		p = new JPanel();
+		p.setLayout(new GridLayout(1, 2));
+		//Add action listeners
+		browseHttp.addActionListener(new BrowseHttp());
+		browseSpdy.addActionListener(new BrowseSpdy());
+		browseQuic.addActionListener(new BrowseQuic());
+		//Add action listeners to the JPanel
+		p.add(browseHttp);
+		p.add(browseSpdy);
+		p.add(browseQuic);
+		pathHttp.setEditable(false);
+		pathSpdy.setEditable(false);
+		pathQuic.setEditable(false);
+		filenameHttp.setEditable(false);
+		filenameSpdy.setEditable(false);
+		filenameQuic.setEditable(false);
+		//Add browse button panel to packetContainer
+		packetContainer.add(p);
+		//Add packetContainer to the outerContainer
+		outerContainer.add(packetContainer);
+		//Results Table
+		p = new JPanel();
+		p.setPreferredSize(new Dimension(10, 10));
+		p.setLayout(new GridLayout(1, 1));
+		table = new JTable(modelResults);
+		modelResults.addColumn("Results Property");
+		modelResults.addColumn("Results Value");
+		tableContainer = new JScrollPane(table);
+		p.add(tableContainer, BorderLayout.SOUTH);
+		p.setPreferredSize(new Dimension(500,100));
+		//Add results table panel to resultsContainer
+		resultsContainer.add(p);
+		//Add resultsContainer to the outerContainer
+		outerContainer.add(resultsContainer);
+		//Add the outerContainer to the JFrame
+		this.getContentPane().add(outerContainer);
 		this.pack();
 		this.setVisible(true);
 	}
@@ -99,6 +154,15 @@ public class FileBrowseSave extends JFrame {
 	class BrowseSpdy implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			initPcap(fileSpdy, filenameSpdy, pathSpdy, modelSpdy);
+		}
+	}
+	
+	/**
+	 * BrowseQuic with an action listener to handle browsing for QUIC file
+	 */
+	class BrowseQuic implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			initPcap(fileQuic, filenameQuic, pathQuic, modelQuic);
 		}
 	}
 	
@@ -140,10 +204,23 @@ public class FileBrowseSave extends JFrame {
 			packetList = Analyze.start("traces/" + filename.getText(), "a");
 			removePacketsFromTable(model);
 			addPacketsToTable(packetList, model);
+			Results results = Calculate.start(packetList);
+			addResultsToTable(results);
 		}
 		if (ret == JFileChooser.CANCEL_OPTION) {
 			pathSpdy.setText("");
 		}
+	}
+	
+	/**
+	 * Add results to the Results table
+	 * @param results
+	 */
+	public void addResultsToTable(Results results) {		
+		modelResults.addRow(new Object[]{"Average RTT", results.getRtt()});
+		modelResults.addRow(new Object[]{"Throughput", results.getThroughput()});
+		modelResults.addRow(new Object[]{"Latency", results.getLatency()});
+		modelResults.addRow(new Object[]{"Total Bytes", results.getTotalBytes()});
 	}
 
 	/**
