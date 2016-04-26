@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import org.jnetpcap.nio.JBuffer;
 import org.jnetpcap.packet.PcapPacket;
 
+import Objects.DecryptedBytes;
+
 public class ByteHandler {
 
 	private static JBuffer buffer;
@@ -14,10 +16,14 @@ public class ByteHandler {
 	private static int length = 0;
 	
 	public static void initialize(PcapPacket p, ArrayList<Integer> listTcp, ArrayList<Integer> listEth, ArrayList<Integer> listIp4, int counter) {
-		setBuffer(p);
-		setSize(p.size());
-		setHeaderLength(listEth.get(counter) + listIp4.get(counter) + listTcp.get(counter));
-		setLength(getSize() - getHeaderLength());
+		try {
+			setBuffer(p);
+			setSize(p.size());
+			setHeaderLength(listEth.get(counter) + listIp4.get(counter) + listTcp.get(counter));
+			setLength(getSize() - getHeaderLength());
+		} catch (IndexOutOfBoundsException ioobe) {
+			System.out.println("[ByteHandler] Out of bounds");
+		}
 	}
 	
 	public static void setBuffer(PcapPacket p) {
@@ -191,7 +197,8 @@ public class ByteHandler {
 			try {
 				hexString = hexString + Integer.toHexString(buffer.getUByte(i));
 			} catch (BufferUnderflowException bue) {
-				System.out.println(bue);
+				//System.out.println("[ByteHandler] No timestamp for this packet " + bue);
+				return 0L;
 			}
 		}
 		return Long.parseLong(hexString, 16);
@@ -223,5 +230,41 @@ public class ByteHandler {
 		}
 		
 		return "";
+	}
+	
+	//*************************SPDY***************************
+	
+	public static int getContentType() {
+		return buffer.getUByte(54);
+	}
+	
+	public static String getVersion() {
+		String hexString = "";
+		for (int i = 55; i <= 56; i++) {
+			if (buffer.getUByte(i) > 15) {
+				hexString = hexString + " " + Integer.toHexString(buffer.getUByte(i));
+				
+			} else {
+				hexString = hexString + " 0" + Integer.toHexString(buffer.getUByte(i));
+			}
+		}
+		return hexString;
+	}
+
+	public static String getSslLength() {
+		
+		String hexString = "";
+		for (int i = 57; i <= 58; i++) {
+			hexString = hexString + Integer.toHexString(buffer.getUByte(i));
+		}
+		return hexString;
+	}
+	
+	public static String getStreamLength(DecryptedBytes db, int start, int end) {
+		String hexString = "";
+		for (int i = start; i <= end; i++) {
+			hexString = hexString + db.getBytes().get(i);
+		}
+		return hexString;
 	}
 }

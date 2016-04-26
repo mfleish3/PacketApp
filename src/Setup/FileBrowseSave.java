@@ -27,9 +27,11 @@ import javax.swing.table.DefaultTableModel;
 
 import Calculations.Calculate;
 import Objects.Packet;
+import Objects.PacketSpdy;
 import Objects.Results;
 //Packet imports
 import Packet.Analyze;
+import Packet.ExtractSpdy;
 import Settings.Constants;
 
 public class FileBrowseSave extends JFrame {
@@ -144,7 +146,7 @@ public class FileBrowseSave extends JFrame {
 	 */
 	class BrowseHttp implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			initPcap(fileHttp, filenameHttp, pathHttp, modelHttp);
+			initPcap(fileHttp, filenameHttp, pathHttp, modelHttp, Constants.HTTP);
 		}
 	}
   
@@ -153,7 +155,7 @@ public class FileBrowseSave extends JFrame {
 	 */
 	class BrowseSpdy implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			initPcap(fileSpdy, filenameSpdy, pathSpdy, modelSpdy);
+			initPcap(fileSpdy, filenameSpdy, pathSpdy, modelSpdy, Constants.SPDY);
 		}
 	}
 	
@@ -162,7 +164,7 @@ public class FileBrowseSave extends JFrame {
 	 */
 	class BrowseQuic implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			initPcap(fileQuic, filenameQuic, pathQuic, modelQuic);
+			initPcap(fileQuic, filenameQuic, pathQuic, modelQuic, Constants.QUIC);
 		}
 	}
 	
@@ -191,7 +193,7 @@ public class FileBrowseSave extends JFrame {
 	 * @param path
 	 * @param model
 	 */
-	public void initPcap(File file, JTextField filename, JTextField path, DefaultTableModel model) {
+	public void initPcap(File file, JTextField filename, JTextField path, DefaultTableModel model, String proto) {
 		JFileChooser c = new JFileChooser();
 		int ret = c.showOpenDialog(FileBrowseSave.this);
 		if (ret == JFileChooser.APPROVE_OPTION) {
@@ -199,13 +201,27 @@ public class FileBrowseSave extends JFrame {
 			filename.setText(c.getSelectedFile().getName());
 			path.setText(c.getCurrentDirectory().toString());
 			saveFileToProject(file);
-			//Get ArrayList of packets from Http pcap file for display
-			ArrayList<Packet> packetList = new ArrayList<Packet>();
-			packetList = Analyze.start("traces/" + filename.getText(), "a");
-			removePacketsFromTable(model);
-			addPacketsToTable(packetList, model);
-			Results results = Calculate.start(packetList);
-			addResultsToTable(results);
+			switch (proto) {
+				case Constants.HTTP:
+					//Get ArrayList of packets from Http pcap file for display
+					ArrayList<Packet> packetList = new ArrayList<Packet>();
+					packetList = Analyze.start("traces/" + filename.getText(), "a");
+					removePacketsFromTable(model);
+					addPacketsToTableHttp(packetList, model);
+					Results results = Calculate.start(packetList);
+					addResultsToTable(results);
+					break;
+				case Constants.SPDY:
+					//Get ArrayList of packets from Spdy pcap file for display
+					ArrayList<PacketSpdy> packetListSpdy = new ArrayList<PacketSpdy>();
+					packetListSpdy = ExtractSpdy.start("traces/" + filename.getText(), "a");
+					addPacketsToTableSpdy(packetListSpdy, model);
+					break;
+				case Constants.QUIC:
+					break;
+				default:
+					break;
+			}
 		}
 		if (ret == JFileChooser.CANCEL_OPTION) {
 			pathSpdy.setText("");
@@ -224,11 +240,11 @@ public class FileBrowseSave extends JFrame {
 	}
 
 	/**
-	 * Add packets for HTTP/SPDY to their corresponding table
+	 * Add packets for HTTP
 	 * @param packetList
 	 * @param model
 	 */
-	public void addPacketsToTable(ArrayList<Packet> packetList, DefaultTableModel model) {
+	public void addPacketsToTableHttp(ArrayList<Packet> packetList, DefaultTableModel model) {
 		//Add the chosen rows for each packet
 		for (int i = 0; i < packetList.size(); i++) {
 			model.addRow(new Object[]{i, "Type", packetList.get(i).getType()});
@@ -237,6 +253,23 @@ public class FileBrowseSave extends JFrame {
 			model.addRow(new Object[]{i, "MSS", packetList.get(i).getMss()});
 			model.addRow(new Object[]{i, "Seq #", packetList.get(i).getSeq()});
 			model.addRow(new Object[]{i, "Ack #", packetList.get(i).getAck()});
+		}
+	}
+	
+	/**
+	 * Add packets for SPDY
+	 * @param packetList
+	 * @param model
+	 */
+	public void addPacketsToTableSpdy(ArrayList<PacketSpdy> packetList, DefaultTableModel model) {
+		//Add the chosen rows for each packet
+		for (int i = 0; i < packetList.size(); i++) {
+			model.addRow(new Object[]{i, "Content Type", packetList.get(i).getContentType()});
+			model.addRow(new Object[]{i, "VersionP", packetList.get(i).getVersion()});
+			model.addRow(new Object[]{i, "SSL Length", packetList.get(i).getLength()});
+			for (int j = 0; j < packetList.get(i).getStreams().size(); j++) {
+				model.addRow(new Object[]{i, "Stream " + (j+1), packetList.get(i).getStreams().get(j)});
+			}
 		}
 	}
   

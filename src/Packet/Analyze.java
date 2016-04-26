@@ -91,6 +91,8 @@ public class Analyze {
 				if (packet.hasHeader(ip4)) {
 					packet.getHeader(ip4);
 					listIp4.add(ip4.getLength());
+				} else if ((packet.hasHeader(tcp)||packet.hasHeader(udp))&&(packet.hasHeader(eth))) {
+					listIp4.add(0);
 				} else {
 					noHeaderCounter++;
 //					System.out.println("No Header: " + noHeaderCounter + " Size: " + listIp4.size());
@@ -254,6 +256,7 @@ public class Analyze {
 					if (option.contains("a")) {
 						System.out.println("Not part of this TCP connection");
 						System.out.println();
+						continue;
 					}
 				}
 				
@@ -293,8 +296,12 @@ public class Analyze {
 					} else {
 						
 					}
-					//Add packet to correct connection
-					connections.get(packet.getConnection()).getPacketList().add(packet);
+					try {
+						//Add packet to correct connection
+						connections.get(packet.getConnection()).getPacketList().add(packet);
+					} catch (IndexOutOfBoundsException ioobe) {
+						System.out.println("[Analyze] Out of bounds for connection ArrayList");
+					}
 				}
 			} else if ((httpList.contains(counter-1))) { 
 				String httpType = ByteHandler.httpCheck();
