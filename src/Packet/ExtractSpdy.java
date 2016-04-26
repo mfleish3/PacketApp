@@ -113,7 +113,7 @@ public class ExtractSpdy {
 		//Get the text file with the decrypted SSL data for SPDY
 		Scanner sc2 = null;
 	    try {
-	        sc2 = new Scanner(new File(System.getProperty("user.dir") + "/traces/test"));
+	        sc2 = new Scanner(new File(System.getProperty("user.dir") + "/traces/spdy.txt"));
 	    } catch (FileNotFoundException e) {
 	        e.printStackTrace();  
 	    }
