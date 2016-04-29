@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Scanner;
 
 import org.jnetpcap.*;
@@ -41,6 +42,16 @@ public class ExtractSpdy {
 			
 			ByteHandler.setBuffer(p);
 			PacketSpdy packet = new PacketSpdy();
+			
+			//Set IP Source and Destination
+			packet.setIpSource(ByteHandler.getSpdyIpSource()); //26-29
+			packet.setIpDest(ByteHandler.getSpdyIpDest()); //30-33
+			
+			//Set timestamp
+			packet.setTimestamp(p.getCaptureHeader().timestampInMillis());
+			
+			//Set size
+			packet.setSize(p.getTotalSize());
 			
 			//Get current decrypted bytes
 			db = dbList.get(counter);

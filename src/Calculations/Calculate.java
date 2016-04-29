@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import Packet.Analyze;
 import Packet.Connection;
 import Objects.Packet;
+import Objects.PacketSpdy;
 import Objects.Results;
 
 public class Calculate {
@@ -11,16 +12,63 @@ public class Calculate {
 	static int totalBytes = 0;
 	static double allTime = 0;
 		
-	public static Results start(ArrayList<Packet> pack) {
+	public static Results startHttp(ArrayList<Packet> packet) {
 		
 		ArrayList<Connection> conn = new ArrayList<Connection>();
 		Results results = new Results();
 		
 		conn = Analyze.getConnections();
-		results = calcLatency(pack, results);
+		results = calcLatency(packet, results);
 		results = calcThroughput(results, conn);
 		results = calcAverageRtt(results, conn);
 		
+		return results;
+	}
+	
+	public static Results startSpdy(ArrayList<PacketSpdy> packet) {
+		
+		Results results = new Results();
+		results = calcAverageRttSpdy(packet, results);
+		results = calcLatencySpdy(packet, results);
+		results = calcThroughputSpdy(packet, results);
+		return results;
+	}
+	
+	public static Results calcThroughputSpdy(ArrayList<PacketSpdy> packets, Results results) {
+		
+		int allBytes = 0;
+		for (int i = 0; i < packets.size(); i++) {
+			allBytes = allBytes + packets.get(i).getSize();
+		}
+		results.setThroughput(roundToNearestHundreth(allBytes / results.getLatency()));
+		results.setTotalBytes(allBytes);
+		return results;
+	}
+	
+	public static Results calcAverageRttSpdy(ArrayList<PacketSpdy> packet, Results results) {
+		//Get the server IP
+		String serverIp = packet.get(0).getIpDest();
+		Long previousTimestamp = packet.get(0).getTimestamp();
+		//Loop through packet ArrayList and get the time difference between each server timestamp
+		for (int i = 1; i < packet.size(); i++) {
+			packet.get(i).setRtt(packet.get(i).getTimestamp() - packet.get(i-1).getTimestamp());
+		}
+		Long total = 0L;
+		for (int i = 1; i < packet.size(); i++) {
+			total = total + packet.get(i).getRtt();
+		}
+		Long averageRtt = total / (packet.size()-1);
+		results.setRtt(averageRtt);
+		return results;
+	}
+	
+	public static Results calcLatencySpdy(ArrayList<PacketSpdy> packet, Results results) {
+		//Get first packet
+		double start = packet.get(0).getTimestamp();
+		//Get last packet
+		double end = packet.get(packet.size()-1).getTimestamp();
+		allTime = end - start;
+		results.setLatency(allTime);
 		return results;
 	}
 	
@@ -56,7 +104,7 @@ public class Calculate {
 			}
 			allBytes = allBytes + totalBytes;
 		}
-		results.setThroughput(allBytes / allTime);
+		results.setThroughput(roundToNearestHundreth(allBytes / allTime));
 		results.setTotalBytes(allBytes);
 		return results;
 	}
@@ -95,8 +143,12 @@ public class Calculate {
 			sum = sum + total.get(i);
 		}
 		double avg = sum / total.size() / 10.0;;
-		results.setRtt(avg);
+		results.setRtt(roundToNearestHundreth(avg));
 		return results;
+	}
+	
+	public static double roundToNearestHundreth(double d) {
+		return Math.round(d * 100.0) / 100.0;
 	}
 	
 }

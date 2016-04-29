@@ -267,4 +267,22 @@ public class ByteHandler {
 		}
 		return hexString;
 	}
+	
+	public static String getSpdyIpSource() {
+		
+		String hexString = "";
+		for (int i = 26; i <= 29; i++) {
+			hexString = hexString + Integer.toHexString(buffer.getUByte(i));
+		}
+		return hexString;
+	}
+	
+	public static String getSpdyIpDest() {
+		
+		String hexString = "";
+		for (int i = 30; i <= 33; i++) {
+			hexString = hexString + Integer.toHexString(buffer.getUByte(i));
+		}
+		return hexString;
+	}
 }
