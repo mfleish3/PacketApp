@@ -2,7 +2,6 @@ package Setup;
 
 //AWT imports
 import java.awt.BorderLayout;
-import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -32,7 +31,7 @@ import Objects.Packet;
 import Objects.PacketSpdy;
 import Objects.Results;
 //Packet imports
-import Packet.Analyze;
+import Packet.ExtractHttp;
 import Packet.ExtractSpdy;
 import Settings.Constants;
 
@@ -40,16 +39,16 @@ public class FileBrowseSave extends JFrame {
 	
 	private JTextField filenameHttp = new JTextField();
 	private JTextField filenameSpdy = new JTextField();
-	private JTextField filenameQuic = new JTextField();
+//	private JTextField filenameQuic = new JTextField();
 	private JTextField pathHttp = new JTextField();
 	private JTextField pathSpdy = new JTextField();
-	private JTextField pathQuic = new JTextField();
+//	private JTextField pathQuic = new JTextField();
 	private JButton browseHttp = new JButton("Browse HTTP");
 	private JButton browseSpdy = new JButton("Browse SDPY");
-	private JButton browseQuic = new JButton("Browse QUIC");
+//	private JButton browseQuic = new JButton("Browse QUIC");
 	private File fileHttp;
 	private File fileSpdy;
-	private File fileQuic;
+//	private File fileQuic;
 	private DefaultTableModel modelHttp = new DefaultTableModel();
 	private DefaultTableModel modelSpdy = new DefaultTableModel();
 //	private DefaultTableModel modelQuic = new DefaultTableModel();
@@ -229,7 +228,7 @@ public class FileBrowseSave extends JFrame {
 				case Constants.HTTP:
 					//Get ArrayList of packets from Http pcap file for display
 					ArrayList<Packet> packetList = new ArrayList<Packet>();
-					packetList = Analyze.start("traces/" + filename.getText(), "a");
+					packetList = ExtractHttp.start("traces/" + filename.getText(), "a");
 					removePacketsFromTable(model);
 					addPacketsToTableHttp(packetList, model);
 					results = Calculate.startHttp(packetList);
@@ -273,12 +272,8 @@ public class FileBrowseSave extends JFrame {
 	public void addPacketsToTableHttp(ArrayList<Packet> packetList, DefaultTableModel model) {
 		//Add the chosen rows for each packet
 		for (int i = 0; i < packetList.size(); i++) {
-			model.addRow(new Object[]{i, "Type", packetList.get(i).getType()});
-			model.addRow(new Object[]{i, "Source IP", packetList.get(i).getSource()});
-			model.addRow(new Object[]{i, "Dest IP", packetList.get(i).getDestination()});
-			model.addRow(new Object[]{i, "MSS", packetList.get(i).getMss()});
-			model.addRow(new Object[]{i, "Seq #", packetList.get(i).getSeq()});
-			model.addRow(new Object[]{i, "Ack #", packetList.get(i).getAck()});
+			model.addRow(new Object[]{i, "Source IP", packetList.get(i).getIpSource()});
+			model.addRow(new Object[]{i, "Dest IP", packetList.get(i).getIpDest()});
 		}
 	}
 	

@@ -20,6 +20,7 @@ public class Packet {
 	private boolean ret;
 	private String seqString;
 	private Long mss;
+	private Long rtt;
 	
 	public Packet() {
 		this.type = "";
@@ -35,6 +36,15 @@ public class Packet {
 		this.ret = false;
 		this.seqString = "";
 		this.mss = 0L;
+		this.rtt = 0L;
+	}
+	
+	public void setRtt(Long rtt) {
+		this.rtt = rtt;
+	}
+	
+	public Long getRtt() {
+		return this.rtt;
 	}
 	
 	public void setType(String type) {
@@ -76,11 +86,11 @@ public class Packet {
 		return this.number;
 	}
 	
-	public void setTime(Long time) {
+	public void setTimestamp(Long time) {
 		this.timestamp = time;
 	}
 	
-	public Long getTIme() {
+	public Long getTimestamp() {
 		return this.timestamp;
 	}
 	

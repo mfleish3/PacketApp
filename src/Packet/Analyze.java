@@ -42,7 +42,6 @@ public class Analyze {
 		
 		PcapPacketHandler<PcapPacketArrayList> jpacketHandler = new PcapPacketHandler<PcapPacketArrayList>() {
 			
-			int noHeaderCounter = 0;
 			int index = 0;
 			
 			public void nextPacket(PcapPacket packet, PcapPacketArrayList PaketsList) {
@@ -76,7 +75,6 @@ public class Analyze {
 					listTcp.add(udp.getLength());
 					udpList.add(index);
 				} else {
-					noHeaderCounter++;
 //					System.out.println("No Header: " + noHeaderCounter + " Size: " + listTcp.size());
 				}
 				
@@ -84,7 +82,6 @@ public class Analyze {
 			         packet.getHeader(eth);
 			         listEth.add(eth.getLength());
 			    } else {
-			    	noHeaderCounter++;
 //			    	System.out.println("No Header: " + noHeaderCounter + " Size: " + listEth.size());
 			    }
 				
@@ -94,7 +91,6 @@ public class Analyze {
 				} else if ((packet.hasHeader(tcp)||packet.hasHeader(udp))&&(packet.hasHeader(eth))) {
 					listIp4.add(0);
 				} else {
-					noHeaderCounter++;
 //					System.out.println("No Header: " + noHeaderCounter + " Size: " + listIp4.size());
 				}
 				
@@ -109,7 +105,6 @@ public class Analyze {
 		int counter = 0;
 		ArrayList<Packet> packetList= new ArrayList<Packet>();
 		
-		boolean init = true;
 		Long timestamp = null;
 		BigInteger currentSeq = null;
 		BigInteger currentAck = null;
@@ -146,7 +141,7 @@ public class Analyze {
 					packet.setSource(Constants.SYN);
 					clientSource = ByteHandler.getSourceIP();
 					timestamp = ByteHandler.getTimestamp(Constants.SYN);
-					packet.setTime(timestamp);
+					packet.setTimestamp(timestamp);
 					//Set connection number for packet
 					packet.setConnection(conn);
 					Connection c = new Connection();
@@ -165,7 +160,7 @@ public class Analyze {
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
 					serverSource = ByteHandler.getSourceIP();
 					timestamp = ByteHandler.getTimestamp(Constants.SYN_ACK);
-					packet.setTime(timestamp);
+					packet.setTimestamp(timestamp);
 					Packet pack;
 					//Loop through client and find previous request
 					for (int i = 0; i < client.size(); i++) {
@@ -191,7 +186,7 @@ public class Analyze {
 					packet.setSource(Constants.ACK);
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
 					timestamp = ByteHandler.getTimestamp(Constants.ACK);
-					packet.setTime(timestamp);
+					packet.setTimestamp(timestamp);
 					print = true;
 				} else if (buffer.getUByte(47) == 24) { 	//18 - PSH, ACK
 					if (option.contains("a")) {
@@ -200,7 +195,7 @@ public class Analyze {
 					}
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
 					timestamp = ByteHandler.getTimestamp(Constants.PSH_ACK);
-					packet.setTime(timestamp);
+					packet.setTimestamp(timestamp);
 					print = true;
 				} else if (buffer.getUByte(47) == 17) {		//11 - FIN, ACK
 					if (option.contains("a")) {	
@@ -209,7 +204,7 @@ public class Analyze {
 					}
 					currentAck = new BigInteger(ByteHandler.getAckNumber(), 16 );
 					timestamp = ByteHandler.getTimestamp(Constants.FIN_ACK);
-					packet.setTime(timestamp);
+					packet.setTimestamp(timestamp);
 					print = true;
 				} else if (buffer.getUByte(47) == 4) {		//4 - RST
 					if (option.contains("a")) {
