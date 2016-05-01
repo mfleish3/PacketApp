@@ -6,12 +6,24 @@ public class Results {
 	private double throughput;
 	private double latnecy;
 	private int totalBytes;
+	private int numberOfConnections;
+	private int totalPackets;
 	
 	public Results() {
 		this.rtt = 0;
 		this.throughput = 0;
 		this.latnecy = 0;
 		this.totalBytes = 0;
+		this.numberOfConnections = 0;
+		this.totalPackets = 0;
+	}
+	
+	public int getTotalPackets() {
+		return this.totalPackets;
+	}
+	
+	public int getNumberOfConnections() {
+		return this.numberOfConnections;
 	}
 	
 	public double getRtt() {
@@ -28,6 +40,14 @@ public class Results {
 	
 	public int getTotalBytes() {
 		return this.totalBytes;
+	}
+	
+	public void setTotalPackets(int totalPackets) {
+		this.totalPackets = totalPackets;
+	}
+	
+	public void setNumberOfConnections(int numberOfConnections) {
+		this.numberOfConnections = numberOfConnections;
 	}
 	
 	public void setRtt(double rtt) {

@@ -1,27 +1,27 @@
 package Calculations;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import Objects.Packet;
 import Objects.PacketSpdy;
 import Objects.Results;
 
 public class Calculate {
-
-	static int totalBytes = 0;
-	static double allTime = 0;
 	
 	/**
 	 * HTTP Calculate average rtt, latency, and throughput
 	 * @param packet (HTTP)
 	 * @return HTTP results
 	 */
-	public static Results startHttp(ArrayList<Packet> packet) {
+	public static Results startHttp(ArrayList<Packet> packets) {
 		
 		Results results = new Results();
-		results = calcAverageRttHttp(packet, results);
-		results = calcLatencyHttp(packet, results);
-		results = calcThroughputHttp(packet, results);
-		
+		results.setTotalPackets(packets.size());
+		results = calcAverageRttHttp(packets, results);
+		results = calcLatencyHttp(packets, results);
+		results = calcThroughputHttp(packets, results);
 		return results;
 	}
 	
@@ -30,12 +30,13 @@ public class Calculate {
 	 * @param packet (SPDY)
 	 * @return SPDY results
 	 */
-	public static Results startSpdy(ArrayList<PacketSpdy> packet) {
+	public static Results startSpdy(ArrayList<PacketSpdy> packets) {
 		
 		Results results = new Results();
-		results = calcAverageRttSpdy(packet, results);
-		results = calcLatencySpdy(packet, results);
-		results = calcThroughputSpdy(packet, results);
+		results.setTotalPackets(packets.size());
+		results = calcAverageRttSpdy(packets, results);
+		results = calcLatencySpdy(packets, results);
+		results = calcThroughputSpdy(packets, results);
 		return results;
 	}
 	
@@ -62,17 +63,60 @@ public class Calculate {
 	 * @param results
 	 * @return results
 	 */
-	public static Results calcAverageRttHttp(ArrayList<Packet> packet, Results results) {
-		//Loop through packet ArrayList and get the time difference between each server timestamp
-		for (int i = 1; i < packet.size(); i++) {
-			packet.get(i).setRtt(packet.get(i).getTimestamp() - packet.get(i-1).getTimestamp());
+	public static Results calcAverageRttHttp(ArrayList<Packet> packets, Results results) {
+		ArrayList<String> destIps = new ArrayList<String>();
+		//Get first source IP
+		String sourceIp = packets.get(0).getIpSource();
+		//Get first destination IP
+		destIps.add(packets.get(0).getIpDest());
+		//Get all destination IPs
+		String destIp = "";
+		boolean addIp = true;
+		for (int i = 0; i < packets.size(); i++) {
+			destIp = packets.get(i).getIpDest();
+			addIp = true;
+			//Only check dest IP if it's not the source IP
+			if (!(destIp.contains(sourceIp))) {
+				//Loop through destination IPs and only add new destIp if it is not already in the ArrayList
+				for (int j = 0; j < destIps.size(); j++) {
+					if (destIps.get(j).contains(destIp)) {
+						addIp = false;
+					}
+				}
+			} else {
+				addIp = false;
+			}
+			if (addIp) {
+				destIps.add(destIp);
+			}
 		}
+		//Loop through each destination IP
+		for (String ip : destIps) {
+			Packet previousPacket = new Packet();
+			//Loop through packet ArrayList and get the time difference between each server timestamp
+			for (Packet p : packets) {
+				if (p.getIpDest().contains(ip)) {
+					if (previousPacket.getIpDest() != "") {
+						p.setRtt(p.getTimestamp() - previousPacket.getTimestamp());
+						previousPacket = p;
+					} else {
+						previousPacket = p;
+					}
+				}
+			}
+		}
+		//Get all of the RTTs and find the average
+		Long size = 0L;
 		Long total = 0L;
-		for (int i = 1; i < packet.size(); i++) {
-			total = total + packet.get(i).getRtt();
+		for (Packet p : packets) {
+			if (p.getRtt() > 0) {
+				total = total + p.getRtt();
+				size++;
+			}
 		}
-		Long averageRtt = total / (packet.size()-1);
+		Long averageRtt = total / size;
 		results.setRtt(averageRtt);
+		results.setNumberOfConnections(destIps.size());
 		return results;
 	}
 	
@@ -83,6 +127,7 @@ public class Calculate {
 	 * @return results
 	 */
 	public static Results calcLatencyHttp(ArrayList<Packet> packet, Results results) {
+		double allTime = 0;
 		//Get first packet
 		double start = packet.get(0).getTimestamp();
 		//Get last packet
@@ -115,17 +160,60 @@ public class Calculate {
 	 * @param results
 	 * @return results
 	 */
-	public static Results calcAverageRttSpdy(ArrayList<PacketSpdy> packet, Results results) {
-		//Loop through packet ArrayList and get the time difference between each server timestamp
-		for (int i = 1; i < packet.size(); i++) {
-			packet.get(i).setRtt(packet.get(i).getTimestamp() - packet.get(i-1).getTimestamp());
+	public static Results calcAverageRttSpdy(ArrayList<PacketSpdy> packets, Results results) {
+		ArrayList<String> destIps = new ArrayList<String>();
+		//Get first source IP
+		String sourceIp = packets.get(0).getIpSource();
+		//Get first destination IP
+		destIps.add(packets.get(0).getIpDest());
+		//Get all destination IPs
+		String destIp = "";
+		boolean addIp = true;
+		for (int i = 0; i < packets.size(); i++) {
+			destIp = packets.get(i).getIpDest();
+			addIp = true;
+			//Only check dest IP if it's not the source IP
+			if (!(destIp.contains(sourceIp))) {
+				//Loop through destination IPs and only add new destIp if it is not already in the ArrayList
+				for (int j = 0; j < destIps.size(); j++) {
+					if (destIps.get(j).contains(destIp)) {
+						addIp = false;
+					}
+				}
+			} else {
+				addIp = false;
+			}
+			if (addIp) {
+				destIps.add(destIp);
+			}
 		}
+		//Loop through each destination IP
+		for (String ip : destIps) {
+			PacketSpdy previousPacket = new PacketSpdy();
+			//Loop through packet ArrayList and get the time difference between each server timestamp
+			for (PacketSpdy p : packets) {
+				if (p.getIpDest().contains(ip)) {
+					if (previousPacket.getIpDest() != "") {
+						p.setRtt(p.getTimestamp() - previousPacket.getTimestamp());
+						previousPacket = p;
+					} else {
+						previousPacket = p;
+					}
+				}
+			}
+		}
+		//Get all of the RTTs and find the average
+		Long size = 0L;
 		Long total = 0L;
-		for (int i = 1; i < packet.size(); i++) {
-			total = total + packet.get(i).getRtt();
+		for (PacketSpdy p : packets) {
+			if (p.getRtt() > 0) {
+				total = total + p.getRtt();
+				size++;
+			}
 		}
-		Long averageRtt = total / (packet.size()-1);
+		Long averageRtt = total / size;
 		results.setRtt(averageRtt);
+		results.setNumberOfConnections(destIps.size());
 		return results;
 	}
 	
@@ -136,6 +224,7 @@ public class Calculate {
 	 * @return results
 	 */
 	public static Results calcLatencySpdy(ArrayList<PacketSpdy> packet, Results results) {
+		double allTime = 0;
 		//Get first packet
 		double start = packet.get(0).getTimestamp();
 		//Get last packet
@@ -153,5 +242,4 @@ public class Calculate {
 	public static double roundToNearestHundreth(double d) {
 		return Math.round(d * 100.0) / 100.0;
 	}
-	
 }

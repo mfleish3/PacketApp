@@ -6,8 +6,10 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
 //IO imports
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,6 +47,7 @@ public class FileBrowseSave extends JFrame {
 //	private JTextField pathQuic = new JTextField();
 	private JButton browseHttp = new JButton("Browse HTTP");
 	private JButton browseSpdy = new JButton("Browse SDPY");
+	private JButton exportResults = new JButton("Export Results");
 //	private JButton browseQuic = new JButton("Browse QUIC");
 	private File fileHttp;
 	private File fileSpdy;
@@ -54,6 +57,10 @@ public class FileBrowseSave extends JFrame {
 //	private DefaultTableModel modelQuic = new DefaultTableModel();
 	private DefaultTableModel modelResultsHttp = new DefaultTableModel();
 	private DefaultTableModel modelResultsSpdy = new DefaultTableModel();
+	private Results resultsHttp = new Results();
+	private Results resultsSpdy = new Results();
+	private boolean addedHttp = false;
+	private boolean addedSpdy = false;
   
 	public FileBrowseSave() {
 		//Outer container for JFrame
@@ -108,6 +115,7 @@ public class FileBrowseSave extends JFrame {
 		//Add action listeners
 		browseHttp.addActionListener(new BrowseHttp());
 		browseSpdy.addActionListener(new BrowseSpdy());
+		exportResults.addActionListener(new ExportResults());
 //		browseQuic.addActionListener(new BrowseQuic());
 		//Add action listeners to the JPanel
 		p.add(browseHttp);
@@ -155,6 +163,13 @@ public class FileBrowseSave extends JFrame {
 		p.setPreferredSize(new Dimension(500,100));
 		//Add results table panel to resultsContainer
 		resultsContainer.add(p);
+		//Add Export Results button
+		p = new JPanel();
+		p.setPreferredSize(new Dimension(10, 10));
+		p.add(exportResults);
+		exportResults.setVisible(false);
+		//Add results table panel to resultsContainer
+		resultsContainer.add(p);
 		//Add resultsContainer to the outerContainer
 		outerContainer.add(resultsContainer);
 		//Add the outerContainer to the JFrame
@@ -178,6 +193,15 @@ public class FileBrowseSave extends JFrame {
 	class BrowseSpdy implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			initPcap(fileSpdy, filenameSpdy, pathSpdy, modelSpdy, Constants.SPDY);
+		}
+	}
+	
+	/**
+	 * BrowseHttp with an action listener to handle browsing for HTTP file
+	 */
+	class ExportResults implements ActionListener {
+		public void actionPerformed(ActionEvent e) {
+			outputResults(resultsHttp, resultsSpdy);
 		}
 	}
 	
@@ -223,24 +247,31 @@ public class FileBrowseSave extends JFrame {
 			filename.setText(c.getSelectedFile().getName());
 			path.setText(c.getCurrentDirectory().toString());
 			saveFileToProject(file);
-			Results results = new Results();
 			switch (proto) {
 				case Constants.HTTP:
 					//Get ArrayList of packets from Http pcap file for display
 					ArrayList<Packet> packetList = new ArrayList<Packet>();
 					packetList = ExtractHttp.start("traces/" + filename.getText(), "a");
-					removePacketsFromTable(model);
+					removeRowsFromTable(model);
 					addPacketsToTableHttp(packetList, model);
-					results = Calculate.startHttp(packetList);
-					addResultsToTable(results, modelResultsHttp);
+					resultsHttp = new Results();
+					resultsHttp = Calculate.startHttp(packetList);
+					removeRowsFromTable(modelResultsHttp);
+					addResultsToTable(resultsHttp, modelResultsHttp);
+					addedHttp = true;
+					initExport();
 					break;
 				case Constants.SPDY:
 					//Get ArrayList of packets from Spdy pcap file for display
 					ArrayList<PacketSpdy> packetListSpdy = new ArrayList<PacketSpdy>();
 					packetListSpdy = ExtractSpdy.start("traces/" + filename.getText(), "a");
 					addPacketsToTableSpdy(packetListSpdy, model);
-					results = Calculate.startSpdy(packetListSpdy);
-					addResultsToTable(results, modelResultsSpdy);
+					resultsSpdy = new Results();
+					resultsSpdy = Calculate.startSpdy(packetListSpdy);
+					removeRowsFromTable(modelResultsSpdy);
+					addResultsToTable(resultsSpdy, modelResultsSpdy);
+					addedSpdy = true;
+					initExport();
 					break;
 				case Constants.QUIC:
 					break;
@@ -257,11 +288,13 @@ public class FileBrowseSave extends JFrame {
 	 * Add results to the Results table
 	 * @param results
 	 */
-	public void addResultsToTable(Results results, DefaultTableModel model) {		
+	public void addResultsToTable(Results results, DefaultTableModel model) {
+		model.addRow(new Object[]{"Number of Packets", results.getTotalPackets()});
 		model.addRow(new Object[]{"Average RTT", results.getRtt() + " ms"});
 		model.addRow(new Object[]{"Throughput", results.getThroughput() + " bytes/ms"});
 		model.addRow(new Object[]{"Latency", results.getLatency() + " ms"});
 		model.addRow(new Object[]{"Total Bytes", results.getTotalBytes() + " bytes"});
+		model.addRow(new Object[]{"Number of Connections", results.getNumberOfConnections()});
 	}
 
 	/**
@@ -301,12 +334,68 @@ public class FileBrowseSave extends JFrame {
 	 * If a pcap file already has been loaded, clear the table
 	 * @param model
 	 */
-	public void removePacketsFromTable(DefaultTableModel model) {
+	public void removeRowsFromTable(DefaultTableModel model) {
 		int rows = model.getRowCount();
 		if (rows > 0) {
 			for (int i = rows-1; i > -1; i--) {
 				model.removeRow(i);
 			}
+		}
+	}
+	
+	/**
+	 * Output results to txt file
+	 * @throws IOException
+	 */
+	public static void outputResults(Results resultsHttp, Results resultsSpdy) {
+		try {
+			BufferedWriter out = null;
+			out = new BufferedWriter(new FileWriter(System.getProperty("user.dir") + "\\results.xls"));
+			out.write("HTTP");
+			out.newLine();
+			out.write(String.valueOf(resultsHttp.getTotalPackets()));
+			out.newLine();
+			out.write(String.valueOf(resultsHttp.getRtt()));
+			out.newLine();
+			out.write(String.valueOf(resultsHttp.getThroughput()));
+			out.newLine();
+			out.write(String.valueOf(resultsHttp.getLatency()));
+			out.newLine();
+			out.write(String.valueOf(resultsHttp.getTotalBytes()));
+			out.newLine();
+			out.write(String.valueOf(resultsHttp.getNumberOfConnections()));
+			out.newLine();
+			out.newLine();
+			out.write("SPDY");
+			out.newLine();
+			out.write(String.valueOf(resultsSpdy.getTotalPackets()));
+			out.newLine();
+			out.write(String.valueOf(resultsSpdy.getRtt()));
+			out.newLine();
+			out.write(String.valueOf(resultsSpdy.getThroughput()));
+			out.newLine();
+			out.write(String.valueOf(resultsSpdy.getLatency()));
+			out.newLine();
+			out.write(String.valueOf(resultsSpdy.getTotalBytes()));
+			out.newLine();
+			out.write(String.valueOf(resultsSpdy.getNumberOfConnections()));
+			out.flush();  
+			out.close();  
+		} catch (IOException ioe) {
+			System.out.println("[Calculate] outputResults error: " + ioe);
+		}
+	}
+	
+	/**
+	 * Show Export Results button only if both HTTP and SPDY have been added
+	 */
+	public void initExport() {
+		if (addedHttp && addedSpdy) {
+			addedHttp = false;
+			addedSpdy = false;
+			exportResults.setVisible(true);
+		} else {
+			exportResults.setVisible(false);
 		}
 	}
   
