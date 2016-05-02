@@ -285,4 +285,35 @@ public class ByteHandler {
 		}
 		return hexString;
 	}
+	
+	public static String getQuicCidLength() {
+		
+		return Integer.toHexString(buffer.getUByte(42));
+	}
+	
+	public static String getQuicCid(int lengthDecimal) {
+		
+		int end = 42 + lengthDecimal;
+		String hexString = "";
+		for (int i = 43; i <= end; i++) {
+			hexString = hexString + Integer.toHexString(buffer.getUByte(i));
+		}
+		return hexString;
+	}
+	
+	public static String getQuicSequence(int lengthFlags, int lengthSeq) {
+		int start = 43 + lengthFlags;
+		int end = start + lengthSeq;
+		String hexString = "";
+		for (int i = start; i < end; i++) {
+			if (buffer.getUByte(i) > 15) {
+				hexString = hexString + " " + Integer.toHexString(buffer.getUByte(i));
+				
+			} else {
+				hexString = hexString + " 0" + Integer.toHexString(buffer.getUByte(i));
+			}
+		}
+		return hexString;
+	}
+	
 }

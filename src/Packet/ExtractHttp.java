@@ -1,5 +1,6 @@
 package Packet;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import org.jnetpcap.*;
@@ -10,7 +11,7 @@ import Objects.Packet;
 
 public class ExtractHttp {
 	
-	public static ArrayList<Packet> start(String trace, String option) {
+	public static ArrayList<Packet> start(String trace) {
 		
 		StringBuilder errbuf = new StringBuilder();
 		Pcap pcap = Pcap.openOffline(trace, errbuf);
@@ -29,20 +30,21 @@ public class ExtractHttp {
 		ArrayList<Packet> packetList= new ArrayList<Packet>();
 		
 		for (PcapPacket p : packets) {
-			
 			ByteHandler.setBuffer(p);
 			Packet packet = new Packet();
-			
 			//Set IP Source and Destination
 			packet.setIpSource(ByteHandler.getSpdyIpSource()); //26-29 (Same indices for HTTP)
 			packet.setIpDest(ByteHandler.getSpdyIpDest()); //30-33 (Same indices for HTTP)
-			
 			//Set timestamp
 			packet.setTimestamp(p.getCaptureHeader().timestampInMillis());
-			
 			//Set size
 			packet.setSize(p.getTotalSize());
-			
+			//Set seq
+			packet.setSeq(new BigInteger(ByteHandler.getSeqNumber(), 16 ));
+			//Set ack
+			packet.setAck(new BigInteger(ByteHandler.getAckNumber(), 16 ));
+			//Set mss
+			packet.setMss(ByteHandler.getMss());
 			//Set HTTP packet info	
 			packetList.add(packet);
 		}

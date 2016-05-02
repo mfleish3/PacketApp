@@ -16,7 +16,9 @@ import Objects.PacketSpdy;
 
 public class ExtractSpdy {
 	
-	public static ArrayList<PacketSpdy> start(String trace, String option) {
+	private static String filenameDecrypt = "";
+	
+	public static ArrayList<PacketSpdy> start(String trace) {
 		
 		StringBuilder errbuf = new StringBuilder();
 		Pcap pcap = Pcap.openOffline(trace, errbuf);
@@ -124,7 +126,7 @@ public class ExtractSpdy {
 		//Get the text file with the decrypted SSL data for SPDY
 		Scanner sc2 = null;
 	    try {
-	        sc2 = new Scanner(new File(System.getProperty("user.dir") + "/traces/spdy-youtube.txt"));
+	        sc2 = new Scanner(new File(System.getProperty("user.dir") + "/traces/" + filenameDecrypt));
 	    } catch (FileNotFoundException e) {
 	        e.printStackTrace();  
 	    }
@@ -171,5 +173,9 @@ public class ExtractSpdy {
 	    	}
 	    }
 	    return dbList;
+	}
+	
+	public static void setFilenameDecrypt(String filename) {
+		filenameDecrypt = filename;
 	}
 }
