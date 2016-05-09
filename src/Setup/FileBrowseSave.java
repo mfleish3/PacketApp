@@ -64,10 +64,13 @@ public class FileBrowseSave extends JFrame {
 	private DefaultTableModel modelQuic = new DefaultTableModel();
 	private DefaultTableModel modelResultsHttp = new DefaultTableModel();
 	private DefaultTableModel modelResultsSpdy = new DefaultTableModel();
+	private DefaultTableModel modelResultsQuic = new DefaultTableModel();
 	private Results resultsHttp = new Results();
 	private Results resultsSpdy = new Results();
+	private Results resultsQuic = new Results();
 	private boolean addedHttp = false;
 	private boolean addedSpdy = false;
+	private boolean addedQuic = false;
   
 	public FileBrowseSave() {
 		//Outer container for JFrame
@@ -193,6 +196,21 @@ public class FileBrowseSave extends JFrame {
 		p.add(tableContainer, BorderLayout.SOUTH);
 		//Add results table panel to resultsContainer
 		resultsContainer.add(p);
+		//Results table for QUIC
+		p = new JPanel();
+		p.setPreferredSize(new Dimension(100, 100));
+		p.setLayout(new GridLayout(1, 1));
+		p.setBorder (BorderFactory.createTitledBorder (BorderFactory.createEtchedBorder (),
+                "QUIC Results",
+                TitledBorder.CENTER,
+                TitledBorder.TOP));
+		table = new JTable(modelResultsQuic);
+		modelResultsQuic.addColumn("Property");
+		modelResultsQuic.addColumn("Value");
+		tableContainer = new JScrollPane(table);
+		p.add(tableContainer, BorderLayout.SOUTH);
+		//Add results table panel to resultsContainer
+		resultsContainer.add(p);
 		//Add Export Results button
 		p = new JPanel();
 		p.setPreferredSize(new Dimension(100, 100));
@@ -240,7 +258,7 @@ public class FileBrowseSave extends JFrame {
 	 */
 	class ExportResults implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
-			outputResults(resultsHttp, resultsSpdy);
+			outputResults(resultsHttp, resultsSpdy, resultsQuic);
 		}
 	}
 	
@@ -318,7 +336,14 @@ public class FileBrowseSave extends JFrame {
 					//Get ArrayList of packets from Quic pcap file for display
 					ArrayList<PacketQuic> packetListQuic = new ArrayList<PacketQuic>();
 					packetListQuic = ExtractQuic.start("traces/" + filename.getText());
+					removeRowsFromTable(model);
 					addPacketsToTableQuic(packetListQuic, model);
+					resultsQuic = new Results();
+					resultsQuic = Calculate.startQuic(packetListQuic);
+					removeRowsFromTable(modelResultsQuic);
+					addResultsToTable(resultsQuic, modelResultsQuic);
+					addedQuic = true;
+					initExport();
 					break;
 				case Constants.DECRYPT:
 					ExtractSpdy.setFilenameDecrypt(file.getName());
@@ -420,7 +445,7 @@ public class FileBrowseSave extends JFrame {
 	 * Output results to txt file
 	 * @throws IOException
 	 */
-	public static void outputResults(Results resultsHttp, Results resultsSpdy) {
+	public static void outputResults(Results resultsHttp, Results resultsSpdy, Results resultsQuic) {
 		try {
 			BufferedWriter out = null;
 			out = new BufferedWriter(new FileWriter(System.getProperty("user.dir") + "\\results.xls"));
@@ -452,6 +477,21 @@ public class FileBrowseSave extends JFrame {
 			out.write(String.valueOf(resultsSpdy.getTotalBytes()));
 			out.newLine();
 			out.write(String.valueOf(resultsSpdy.getNumberOfConnections()));
+			out.newLine();
+			out.newLine();
+			out.write("QUIC");
+			out.newLine();
+			out.write(String.valueOf(resultsQuic.getTotalPackets()));
+			out.newLine();
+			out.write(String.valueOf(resultsQuic.getRtt()));
+			out.newLine();
+			out.write(String.valueOf(resultsQuic.getThroughput()));
+			out.newLine();
+			out.write(String.valueOf(resultsQuic.getLatency()));
+			out.newLine();
+			out.write(String.valueOf(resultsQuic.getTotalBytes()));
+			out.newLine();
+			out.write(String.valueOf(resultsQuic.getNumberOfConnections()));
 			out.flush();  
 			out.close();  
 		} catch (IOException ioe) {
@@ -463,9 +503,10 @@ public class FileBrowseSave extends JFrame {
 	 * Show Export Results button only if both HTTP and SPDY have been added
 	 */
 	public void initExport() {
-		if (addedHttp && addedSpdy) {
+		if (addedHttp && addedSpdy && addedQuic) {
 			addedHttp = false;
 			addedSpdy = false;
+			addedQuic = false;
 			exportResults.setVisible(true);
 		} else {
 			exportResults.setVisible(false);
