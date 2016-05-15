@@ -4,7 +4,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import Objects.Packet;
+import Objects.PacketHttp;
 import Objects.PacketQuic;
 import Objects.PacketSpdy;
 import Objects.Results;
@@ -16,7 +16,7 @@ public class Calculate {
 	 * @param packet (HTTP)
 	 * @return HTTP results
 	 */
-	public static Results startHttp(ArrayList<Packet> packets) {
+	public static Results startHttp(ArrayList<PacketHttp> packets) {
 		
 		Results results = new Results();
 		results.setTotalPackets(packets.size());
@@ -62,7 +62,7 @@ public class Calculate {
 	 * @param results
 	 * @return results
 	 */
-	public static Results calcThroughputHttp(ArrayList<Packet> packets, Results results) {
+	public static Results calcThroughputHttp(ArrayList<PacketHttp> packets, Results results) {
 		
 		int allBytes = 0;
 		for (int i = 0; i < packets.size(); i++) {
@@ -79,7 +79,7 @@ public class Calculate {
 	 * @param results
 	 * @return results
 	 */
-	public static Results calcAverageRttHttp(ArrayList<Packet> packets, Results results) {
+	public static Results calcAverageRttHttp(ArrayList<PacketHttp> packets, Results results) {
 		ArrayList<String> destIps = new ArrayList<String>();
 		//Get first source IP
 		String sourceIp = packets.get(0).getIpSource();
@@ -108,9 +108,9 @@ public class Calculate {
 		}
 		//Loop through each destination IP
 		for (String ip : destIps) {
-			Packet previousPacket = new Packet();
+			PacketHttp previousPacket = new PacketHttp();
 			//Loop through packet ArrayList and get the time difference between each server timestamp
-			for (Packet p : packets) {
+			for (PacketHttp p : packets) {
 				if (p.getIpDest().contains(ip)) {
 					if (previousPacket.getIpDest() != "") {
 						p.setRtt(p.getTimestamp() - previousPacket.getTimestamp());
@@ -124,7 +124,7 @@ public class Calculate {
 		//Get all of the RTTs and find the average
 		Long size = 0L;
 		Long total = 0L;
-		for (Packet p : packets) {
+		for (PacketHttp p : packets) {
 			if (p.getRtt() > 0) {
 				total = total + p.getRtt();
 				size++;
@@ -142,7 +142,7 @@ public class Calculate {
 	 * @param results
 	 * @return results
 	 */
-	public static Results calcLatencyHttp(ArrayList<Packet> packet, Results results) {
+	public static Results calcLatencyHttp(ArrayList<PacketHttp> packet, Results results) {
 		double allTime = 0;
 		//Get first packet
 		double start = packet.get(0).getTimestamp();

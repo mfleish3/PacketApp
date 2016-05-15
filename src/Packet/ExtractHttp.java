@@ -7,11 +7,11 @@ import org.jnetpcap.*;
 import org.jnetpcap.packet.*;
 import org.jnetpcap.util.PcapPacketArrayList;
 
-import Objects.Packet;
+import Objects.PacketHttp;
 
 public class ExtractHttp {
 	
-	public static ArrayList<Packet> start(String trace) {
+	public static ArrayList<PacketHttp> start(String trace) {
 		
 		StringBuilder errbuf = new StringBuilder();
 		Pcap pcap = Pcap.openOffline(trace, errbuf);
@@ -27,11 +27,11 @@ public class ExtractHttp {
 		PcapPacketArrayList packets = new PcapPacketArrayList();
 		pcap.loop(-1,jpacketHandler,packets);
 		
-		ArrayList<Packet> packetList= new ArrayList<Packet>();
+		ArrayList<PacketHttp> packetList= new ArrayList<PacketHttp>();
 		
 		for (PcapPacket p : packets) {
 			ByteHandler.setBuffer(p);
-			Packet packet = new Packet();
+			PacketHttp packet = new PacketHttp();
 			//Set IP Source and Destination
 			packet.setIpSource(ByteHandler.getSpdyIpSource()); //26-29 (Same indices for HTTP)
 			packet.setIpDest(ByteHandler.getSpdyIpDest()); //30-33 (Same indices for HTTP)

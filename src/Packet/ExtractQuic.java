@@ -7,7 +7,7 @@ import org.jnetpcap.*;
 import org.jnetpcap.packet.*;
 import org.jnetpcap.util.PcapPacketArrayList;
 
-import Objects.Packet;
+import Objects.PacketHttp;
 import Objects.PacketQuic;
 
 public class ExtractQuic {

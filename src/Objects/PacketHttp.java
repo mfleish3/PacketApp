@@ -2,7 +2,7 @@ package Objects;
 
 import java.math.BigInteger;
 
-public class Packet {
+public class PacketHttp {
 
 	private String type;
 	private String req;
@@ -22,7 +22,7 @@ public class Packet {
 	private Long mss;
 	private Long rtt;
 	
-	public Packet() {
+	public PacketHttp() {
 		this.type = "";
 		this.req = "";
 		this.resp = "";

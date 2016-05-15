@@ -29,7 +29,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
 import Calculations.Calculate;
-import Objects.Packet;
+import Objects.PacketHttp;
 import Objects.PacketQuic;
 import Objects.PacketSpdy;
 import Objects.Results;
@@ -307,7 +307,7 @@ public class FileBrowseSave extends JFrame {
 			switch (proto) {
 				case Constants.HTTP:
 					//Get ArrayList of packets from Http pcap file for display
-					ArrayList<Packet> packetList = new ArrayList<Packet>();
+					ArrayList<PacketHttp> packetList = new ArrayList<PacketHttp>();
 					packetList = ExtractHttp.start(filename.getText());
 					removeRowsFromTable(model);
 					addPacketsToTableHttp(packetList, model);
@@ -374,7 +374,7 @@ public class FileBrowseSave extends JFrame {
 	 * @param packetList
 	 * @param model
 	 */
-	public void addPacketsToTableHttp(ArrayList<Packet> packetList, DefaultTableModel model) {
+	public void addPacketsToTableHttp(ArrayList<PacketHttp> packetList, DefaultTableModel model) {
 		//Add the chosen rows for each packet
 		for (int i = 0; i < packetList.size(); i++) {
 			model.addRow(new Object[]{i, "Source IP", packetList.get(i).getIpSource()});
