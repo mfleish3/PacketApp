@@ -3,6 +3,8 @@ package Packet;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.math.BigInteger;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -126,9 +128,9 @@ public class ExtractSpdy {
 		//Get the text file with the decrypted SSL data for SPDY
 		Scanner sc2 = null;
 	    try {
-	        sc2 = new Scanner(new File(System.getProperty("user.dir") + "/traces/" + filenameDecrypt));
-	    } catch (FileNotFoundException e) {
-	        e.printStackTrace();  
+	        sc2 = new Scanner(new File(System.getProperty("user.dir") + "\\" + filenameDecrypt));
+	    } catch (FileNotFoundException fnfe) {
+	        System.out.println("[ExtractSpdy] " + fnfe); 
 	    }
 	    //Get the amount of bytes in the decrypted data
 	    int amt = 0;

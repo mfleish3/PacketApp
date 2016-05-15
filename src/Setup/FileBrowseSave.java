@@ -276,7 +276,7 @@ public class FileBrowseSave extends JFrame {
 	 * @param file
 	 */
 	public void saveFileToProject(File file) {
-		Path pathTraces = Paths.get(System.getProperty("user.dir")+"\\traces");
+		Path pathTraces = Paths.get(System.getProperty("user.dir"));
 		try {
 			java.nio.file.Files.copy( 
 					file.toPath(), 
@@ -308,7 +308,7 @@ public class FileBrowseSave extends JFrame {
 				case Constants.HTTP:
 					//Get ArrayList of packets from Http pcap file for display
 					ArrayList<Packet> packetList = new ArrayList<Packet>();
-					packetList = ExtractHttp.start("traces/" + filename.getText());
+					packetList = ExtractHttp.start(filename.getText());
 					removeRowsFromTable(model);
 					addPacketsToTableHttp(packetList, model);
 					resultsHttp = new Results();
@@ -321,8 +321,7 @@ public class FileBrowseSave extends JFrame {
 				case Constants.SPDY:
 					//Get ArrayList of packets from Spdy pcap file for display
 					ArrayList<PacketSpdy> packetListSpdy = new ArrayList<PacketSpdy>();
-					String trace = "traces/" + filename.getText();
-					packetListSpdy = ExtractSpdy.start(trace);
+					packetListSpdy = ExtractSpdy.start(filename.getText());
 					removeRowsFromTable(model);
 					addPacketsToTableSpdy(packetListSpdy, model);
 					resultsSpdy = new Results();
@@ -335,7 +334,7 @@ public class FileBrowseSave extends JFrame {
 				case Constants.QUIC:
 					//Get ArrayList of packets from Quic pcap file for display
 					ArrayList<PacketQuic> packetListQuic = new ArrayList<PacketQuic>();
-					packetListQuic = ExtractQuic.start("traces/" + filename.getText());
+					packetListQuic = ExtractQuic.start(filename.getText());
 					removeRowsFromTable(model);
 					addPacketsToTableQuic(packetListQuic, model);
 					resultsQuic = new Results();
