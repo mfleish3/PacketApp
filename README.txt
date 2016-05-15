@@ -3,12 +3,12 @@
 * HTTP vs. SPDY/QUIC
 ********************* 
 
-1) External Libraries
+I. External Libraries
 
 jNetPcap
 http://jnetpcap.com/
 
-2) High Level View of Design
+II. High Level View of Design
 
 Package Calculations
 	Class Calculate
@@ -55,9 +55,9 @@ Package Setup
 	Class StartProject
 		-Contains the main method to start the project with an initialized JFrame
 
-3) How to Run Programs
+III. How to Run the Application
 
-3a. Capturing packets via Wireshark
+III-a. Capturing Packets via Wireshark
 
 When saving the SPDY packet, a second text file containing the decrypted bytes must also be included. This method is as follows:
 
@@ -111,7 +111,7 @@ The method to obtain working pcap files for this application are as follows:
 
 These are to be the selected files for Browse HTTP, Browse SPDY, Browse Decrypt, and Browse Quic respectively.
 
-3b. Starting the application
+III-b. Starting the Application
 
 JAR
 
@@ -123,7 +123,7 @@ ECLIPSE
 1) Open the project
 2) Click 'Run' with StartProject.java as its configure main method
 
-3c. Using the application
+III-c. Using the application
 
 1) View HTTP packet details and calculated results
 	a. Click 'Browse HTTP' button
@@ -139,5 +139,10 @@ ECLIPSE
 	a. Click 'Browse QUIC' button
 	b. Select a QUIC pcap file from a Wireshark capture
 	
-4) Export results to excel
+4) Export Results to Excel
 	a. Once all files have been initialized, click the 'Export Results' button
+
+IV. Additional Info
+
+1) The executable jar file for this application "packet-app.jar" can be found in the app folder
+2) The python file used to graph the results "performance_eval.py" can be found in the evaluation folder
