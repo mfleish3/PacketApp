@@ -5,7 +5,7 @@
 
 1) External Libraries
 
-JnetPcap
+jNetPcap
 http://jnetpcap.com/
 
 2) High Level View of Design
